@@ -1,0 +1,69 @@
+CREATE TABLE customers (
+	id     SERIAL PRIMARY KEY,
+	name   VARCHAR(50) NOT NULL,
+	street VARCHAR(50),
+	city   VARCHAR(50),
+	zip    INTEGER
+);
+
+CREATE TABLE roles (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE tags (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE states (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE systems (
+	id     SERIAL PRIMARY KEY,
+	name   VARCHAR(50) NOT NULL,
+	street VARCHAR(50),
+	city   VARCHAR(50),
+	zip    INTEGER,
+	customerId INTEGER NOT NULL,
+	FOREIGN KEY (customerId) REFERENCES customers(id)
+		ON DELETE CASCADE
+);
+
+CREATE TABLE users (
+	id SERIAL PRIMARY KEY,
+	username VARCHAR(50) NOT NULL,
+	password VARCHAR(50) NOT NULL,
+	firstName VARCHAR(50),
+	lastName VARCHAR(50),
+	roleId INTEGER,
+	FOREIGN KEY (roleId) REFERENCES roles(id)
+		ON DELETE SET NULL
+);
+
+CREATE TABLE maintenances (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50) NOT NULL,
+	frequency INTEGER,
+	systemId INTEGER NOT NULL,
+	userId INTEGER,
+	stateId INTEGER,
+	FOREIGN KEY (systemId) REFERENCES systems(id)
+		ON DELETE CASCADE,
+	FOREIGN KEY (userId) REFERENCES users(id)
+		ON DELETE SET NULL,
+	FOREIGN KEY (stateId) REFERENCES states(id)
+		ON DELETE SET NULL
+);
+
+CREATE TABLE maintenance_tag_assignments (
+	id SERIAL PRIMARY KEY,
+	maintenanceId INTEGER NOT NULL,
+	tagId INTEGER NOT NULL,
+	FOREIGN KEY (maintenanceId) REFERENCES maintenances(id)
+		ON DELETE CASCADE,
+	FOREIGN KEY (tagId) REFERENCES tags(id)
+		ON DELETE CASCADE
+);
