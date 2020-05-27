@@ -18,6 +18,15 @@ app.use(bodyParser.json());
 app.use(helmet());
 app.use(cors());
 
+app.use((err, req, res, next) => {
+	if (err.name === "UnauthorizedError") {
+		res.status(403).json({
+			success: false,
+			message: "Unauthorized"
+		});
+	}
+});
+
 app.post("/login", async (req, res) => {
 	const { username, password } = req.body;
 

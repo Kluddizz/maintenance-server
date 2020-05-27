@@ -92,7 +92,7 @@ describe("Services", () => {
     });
 
     it("Valid get request", async () => {
-      expect.assertions(3);
+      expect.assertions(4);
 
       const request = await fetch("http://localhost:5050/users", {
         method: "GET",
@@ -102,9 +102,35 @@ describe("Services", () => {
       });
 
       const response = await request.json();
+      expect(response.success).toBe(true);
       expect(response.user.username).toBe(user.username);
       expect(response.user.firstname).toBe(user.firstName);
       expect(response.user.lastname).toBe(user.lastName);
+    });
+
+    it("False authorization", async () => {
+      expect.assertions(1);
+
+      const request = await fetch("http://localhost:5050/users", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}a`
+        }
+      });
+
+      const response = await request.json();
+      expect(response.success).toBe(false);
+    });
+
+    it("Fail without auth token", async () => {
+      expect.assertions(1);
+
+      const request = await fetch("http://localhost:5050/users", {
+        method: "GET"
+      });
+
+      const response = await request.json();
+      expect(response.success).toBe(false);
     });
   });
 });
