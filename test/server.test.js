@@ -71,4 +71,40 @@ describe("Services", () => {
       expect(response.token).toBeUndefined();
     });
   });
+
+  describe("User", () => {
+    let token = null;
+
+    beforeAll(async () => {
+      const request = await fetch("http://localhost:5050/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: user.username,
+          password: user.password
+        })
+      });
+
+      const response = await request.json();
+      token = response.token;
+    });
+
+    it("Valid get request", async () => {
+      expect.assertions(3);
+
+      const request = await fetch("http://localhost:5050/users", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const response = await request.json();
+      expect(response.user.username).toBe(user.username);
+      expect(response.user.firstname).toBe(user.firstName);
+      expect(response.user.lastname).toBe(user.lastName);
+    });
+  });
 });
