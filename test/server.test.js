@@ -108,6 +108,64 @@ describe("Services", () => {
       expect(response.user.lastname).toBe(user.lastName);
     });
 
+    it("Update user", async () => {
+      expect.assertions(4);
+
+      const newUsername = "newusername";
+      const newPassword = "newpassword";
+
+      const request1 = await fetch("http://localhost:5050/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          username: newUsername
+        })
+      });
+
+      const response1 = await request1.json();
+
+      const request2 = await fetch("http://localhost:5050/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          username: user.username,
+          password: user.password
+        })
+      });
+
+      const response2 = await request2.json();
+
+      expect(response1.success).toBe(true);
+      expect(response1.message).toBe("Updated user");
+      expect(response2.success).toBe(true);
+      expect(response2.message).toBe("Updated user");
+    });
+
+    it("Update user with empty request", async () => {
+      expect.assertions(2);
+
+      const newUsername = "newusername";
+
+      const request = await fetch("http://localhost:5050/users", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const response = await request.json();
+
+      expect(response.success).toBe(true);
+      expect(response.message).toBe("Updated user");
+    });
+
     it("False authorization", async () => {
       expect.assertions(1);
 
