@@ -26,7 +26,8 @@ router.route("/").post(async (req, res) => {
 
     const payload = {
       id: user.id,
-      username: user.username
+      username: user.username,
+      roleId: user.roleId
     };
 
     const token = jwt.sign(payload, privateKey, { algorithm: "RS256" });

@@ -11,7 +11,7 @@ const port = process.env.PORT || 5050;
 const publicKey = fs.readFileSync(`${__dirname}/public.key`);
 
 const app = express();
-app.use("/users", exprjwt({ secret: publicKey }));
+app.use(exprjwt({ secret: publicKey }).unless({ path: ["/login"] }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(helmet());
