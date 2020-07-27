@@ -5,7 +5,7 @@ const db = require("../db");
 
 router
   .get("/", async (req, res) => {
-    if (req.user.roleId === 1) {
+    if (req.user.roleid === 1) {
       const query = await db.query(
         `
           SELECT *
@@ -20,7 +20,7 @@ router
         message: "Fetched maintenances for the requesting user",
         maintenances: query.rows
       });
-    } else if (req.user.roleId === 0) {
+    } else if (req.user.roleid === 0) {
       const query = await db.query(
         `
           SELECT *
