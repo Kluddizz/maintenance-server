@@ -1,18 +1,10 @@
 const express = require("express");
+const access = require("../express-access");
 const router = express.Router();
 
 const db = require("../db");
 
-router.use("/", (req, res, next) => {
-  if (req.user.roleid !== 0) {
-    res.status(400).json({
-      success: false,
-      message: "The requesting user must be an administrator"
-    });
-  } else {
-    next();
-  }
-});
+router.use("/", access({ roles: ["admin"] }));
 
 router.get("/", async (req, res) => {
   const query = await db.query(
