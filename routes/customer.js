@@ -49,7 +49,7 @@ router.get("/:id", async (req, res) => {
       customer: query.rows[0]
     });
   } else {
-    res.status(200).json({
+    res.status(400).json({
       success: false,
       message: "This customer does not exist"
     });
