@@ -5,10 +5,12 @@ const db = require("../db");
 
 router.use("/", (req, res, next) => {
   if (req.user.roleid !== 0) {
-    res.status(403).json({
+    res.status(400).json({
       success: false,
       message: "The requesting user must be an administrator"
     });
+  } else {
+    next();
   }
 });
 
