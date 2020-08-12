@@ -2,6 +2,7 @@ const db = require("../db");
 const fetch = require("node-fetch");
 
 const admin = require("./objects/admin");
+const user = require("./objects/user");
 
 const customer = {
   name: "testcustomer",
@@ -14,7 +15,8 @@ const customer = {
 };
 
 describe("Customer service", () => {
-  let token = null;
+  let adminToken = null;
+  let userToken = null;
 
   beforeAll(async () => {
     await db.query(
@@ -23,6 +25,14 @@ describe("Customer service", () => {
       VALUES ($1, crypt($2, gen_salt('bf')), $3, $4, $5); 
     `,
       [admin.username, admin.password, admin.firstName, admin.lastName, admin.roleid]
+    );
+
+    await db.query(
+      `
+      INSERT INTO users (username, password, firstName, lastName, roleid)
+      VALUES ($1, crypt($2, gen_salt('bf')), $3, $4, $5); 
+    `,
+      [user.username, user.password, user.firstName, user.lastName, user.roleid]
     );
   });
 
@@ -36,11 +46,20 @@ describe("Customer service", () => {
       [admin.username]
     );
 
+    await db.query(
+      `
+      DELETE
+      FROM users
+      WHERE username = $1;
+    `,
+      [user.username]
+    );
+
     await db.close();
   });
 
   beforeAll(async () => {
-    const request = await fetch("http://localhost:5050/login", {
+    const requestAdmin = await fetch("http://localhost:5050/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -51,18 +70,32 @@ describe("Customer service", () => {
       })
     });
 
-    const response = await request.json();
-    token = response.token;
+    const requestUser = await fetch("http://localhost:5050/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: user.username,
+        password: user.password
+      })
+    });
+
+    const responseAdmin = await requestAdmin.json();
+    const responseUser = await requestUser.json();
+
+    adminToken = responseAdmin.token;
+    userToken = responseUser.token;
   });
 
-  it("Create customer", async () => {
+  it("Create customer as admin", async () => {
     expect.assertions(2);
 
     const request = await fetch ("http://localhost:5050/customer", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${adminToken}`
       },
       body: JSON.stringify(customer)
     });
@@ -78,17 +111,57 @@ describe("Customer service", () => {
       [customer.email]
     );
 
-    await db.query(
+    if (query.rows.length > 0) {
+      await db.query(
+        `
+          DELETE
+          FROM customers
+          WHERE email = $1;
+        `,
+        [customer.email]
+      );
+    }
+
+    expect(response.success).toBe(true);
+    expect(query.rows.length).toBeGreaterThan(0);
+  });
+
+  it("Create customer as normal user", async () => {
+    expect.assertions(2);
+
+    const request = await fetch("http://localhost:5050/customer", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`
+      },
+      body: JSON.stringify(customer)
+    });
+
+    const response = await request.json();
+
+    const query = await db.query(
       `
-        DELETE
+        SELECT *
         FROM customers
         WHERE email = $1;
       `,
       [customer.email]
     );
 
-    expect(response.success).toBe(true);
-    expect(query.rows.length).toBeGreaterThan(0);
+    if (query.rows.length > 0) {
+      await db.query(
+        `
+          DELETE
+          FROM customers
+          WHERE email = $1;
+        `,
+        [customer.email]
+      );
+    }
+
+    expect(response.success).toBe(false);
+    expect(query.rows.length).toBe(0);
   });
 
 });
