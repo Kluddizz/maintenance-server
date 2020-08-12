@@ -3,7 +3,7 @@ const user = {
   password: "test123",
   firstName: "test",
   lastName: "user",
-  roleid: 0
+  roleid: 1
 };
 
 module.exports = user;

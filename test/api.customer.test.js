@@ -1,9 +1,19 @@
 const db = require("../db");
 const fetch = require("node-fetch");
 
-const user = require("./objects/user");
+const admin = require("./objects/admin");
 
-describe("User", () => {
+const customer = {
+  name: "testcustomer",
+  street: "street",
+  city: "city",
+  zip: 12345,
+  email: "test@mail.com",
+  contactperson: "contactperson",
+  phone: "0123456789"
+};
+
+describe("Customer service", () => {
   let token = null;
 
   beforeAll(async () => {
@@ -12,7 +22,7 @@ describe("User", () => {
       INSERT INTO users (username, password, firstName, lastName, roleid)
       VALUES ($1, crypt($2, gen_salt('bf')), $3, $4, $5); 
     `,
-      [user.username, user.password, user.firstName, user.lastName, user.roleid]
+      [admin.username, admin.password, admin.firstName, admin.lastName, admin.roleid]
     );
   });
 
@@ -23,7 +33,7 @@ describe("User", () => {
       FROM users
       WHERE username = $1;
     `,
-      [user.username]
+      [admin.username]
     );
 
     await db.close();
@@ -36,8 +46,8 @@ describe("User", () => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        username: user.username,
-        password: user.password
+        username: admin.username,
+        password: admin.password
       })
     });
 
@@ -45,103 +55,40 @@ describe("User", () => {
     token = response.token;
   });
 
-  it("Valid get request", async () => {
-    expect.assertions(4);
-
-    const request = await fetch("http://localhost:5050/users", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    const response = await request.json();
-    expect(response.success).toBe(true);
-    expect(response.user.username).toBe(user.username);
-    expect(response.user.firstname).toBe(user.firstName);
-    expect(response.user.lastname).toBe(user.lastName);
-  });
-
-  it("Update user", async () => {
-    expect.assertions(4);
-
-    const newUsername = "newusername";
-    const newPassword = "newpassword";
-
-    const request1 = await fetch("http://localhost:5050/users", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        username: newUsername
-      })
-    });
-
-    const response1 = await request1.json();
-
-    const request2 = await fetch("http://localhost:5050/users", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        username: user.username,
-        password: user.password
-      })
-    });
-
-    const response2 = await request2.json();
-
-    expect(response1.success).toBe(true);
-    expect(response1.message).toBe("Updated user");
-    expect(response2.success).toBe(true);
-    expect(response2.message).toBe("Updated user");
-  });
-
-  it("Update user with empty request", async () => {
+  it("Create customer", async () => {
     expect.assertions(2);
 
-    const newUsername = "newusername";
-
-    const request = await fetch("http://localhost:5050/users", {
-      method: "PUT",
+    const request = await fetch ("http://localhost:5050/customer", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`
-      }
+      },
+      body: JSON.stringify(customer)
     });
 
     const response = await request.json();
+
+    const query = await db.query(
+      `
+        SELECT *
+        FROM customers
+        WHERE email = $1;
+      `,
+      [customer.email]
+    );
+
+    await db.query(
+      `
+        DELETE
+        FROM customers
+        WHERE email = $1;
+      `,
+      [customer.email]
+    );
 
     expect(response.success).toBe(true);
-    expect(response.message).toBe("Updated user");
+    expect(query.rows.length).toBeGreaterThan(0);
   });
 
-  it("False authorization", async () => {
-    expect.assertions(1);
-
-    const request = await fetch("http://localhost:5050/users", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}a`
-      }
-    });
-
-    const response = await request.json();
-    expect(response.success).toBe(false);
-  });
-
-  it("Fail without auth token", async () => {
-    expect.assertions(1);
-
-    const request = await fetch("http://localhost:5050/users", {
-      method: "GET"
-    });
-
-    const response = await request.json();
-    expect(response.success).toBe(false);
-  });
 });

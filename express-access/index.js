@@ -1,7 +1,7 @@
 const access = options => {
   const roleMap = {
-    admin: 0,
-    user: 1
+    0: "admin",
+    1: "user"
   };
 
   return (req, res, next) => {
