@@ -29,7 +29,8 @@ describe("Login", () => {
 
     await db.close();
   });
-  it("Valid credentials and receive token", async () => {
+
+  test("Valid credentials and receive token", async () => {
     expect.assertions(2);
 
     const request = await fetch("http://localhost:5050/login", {
@@ -48,7 +49,7 @@ describe("Login", () => {
     expect(response.token).not.toBeUndefined();
   });
 
-  it("Invalid credentials", async () => {
+  test("Invalid credentials", async () => {
     expect.assertions(2);
 
     const request = await fetch("http://localhost:5050/login", {
@@ -67,7 +68,7 @@ describe("Login", () => {
     expect(response.token).toBeUndefined();
   });
 
-  it("Test security against forging attack", async () => {
+  test("Test security against forging attack", async () => {
     expect.assertions(2);
 
     // First login to retreive a token.

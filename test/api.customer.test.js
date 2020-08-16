@@ -34,8 +34,6 @@ const insertCustomer = async () => {
     [customer.name]
   );
 
-  console.log(query.rows);
-
   return query.rows[0].id;
 };
 
@@ -142,7 +140,7 @@ describe("Customer service", () => {
     userToken = responseUser.token;
   });
 
-  it("Create customer as admin", async () => {
+  test("Create customer as admin", async () => {
     expect.assertions(2);
 
     const request = await fetch("http://localhost:5050/customer", {
@@ -180,7 +178,7 @@ describe("Customer service", () => {
     expect(query.rows.length).toBeGreaterThan(0);
   });
 
-  it("Create customer as normal user", async () => {
+  test("Create customer as normal user", async () => {
     expect.assertions(2);
 
     const request = await fetch("http://localhost:5050/customer", {
@@ -218,7 +216,7 @@ describe("Customer service", () => {
     expect(query.rows.length).toBe(0);
   });
 
-  it("Request customers as admin", async () => {
+  test("Request customers as admin", async () => {
     expect.assertions(2);
 
     const request = await fetch("http://localhost:5050/customer", {
@@ -234,7 +232,7 @@ describe("Customer service", () => {
     expect(response.customers).not.toBe(undefined);
   });
 
-  it("Request customers as normal user", async () => {
+  test("Request customers as normal user", async () => {
     expect.assertions(2);
 
     const request = await fetch("http://localhost:5050/customer", {
@@ -250,7 +248,7 @@ describe("Customer service", () => {
     expect(response.customers).toBe(undefined);
   });
 
-  it("Request one customer as admin", async () => {
+  test("Request one customer as admin", async () => {
     expect.assertions(3);
 
     const customerId = await insertCustomer();
@@ -273,7 +271,7 @@ describe("Customer service", () => {
     expect(response.customer.name).toBe(customer.name);
   });
 
-  it("Request one customer as normal user", async () => {
+  test("Request one customer as normal user", async () => {
     expect.assertions(2);
 
     const customerId = await insertCustomer();
@@ -295,7 +293,7 @@ describe("Customer service", () => {
     expect(response.customer).toBe(undefined);
   });
 
-  it("Delete customer as admin", async () => {
+  test("Delete customer as admin", async () => {
     expect.assertions(2);
 
     // Insert test customer
@@ -331,7 +329,7 @@ describe("Customer service", () => {
     expect(query.rows.length).toBe(0);
   });
 
-  it("Delete customer as normal user", async () => {
+  test("Delete customer as normal user", async () => {
     expect.assertions(2);
 
     // Insert test customer
@@ -367,7 +365,7 @@ describe("Customer service", () => {
     expect(query.rows.length).toBeGreaterThan(0);
   });
 
-  it("Update customer as admin", async () => {
+  test("Update customer as admin", async () => {
     expect.assertions(2);
 
     const customerId = await insertCustomer();
@@ -393,7 +391,7 @@ describe("Customer service", () => {
     expect(customerInDb.name).toBe(updatedCustomer.name);
   });
 
-  it("Update customer as normal user", async () => {
+  test("Update customer as normal user", async () => {
     expect.assertions(2);
 
     const customerId = await insertCustomer();
