@@ -3,62 +3,8 @@ const fetch = require("node-fetch");
 
 const admin = require("./objects/admin");
 const user = require("./objects/user");
-
-const customer = {
-  name: "testcustomer",
-  street: "street",
-  city: "city",
-  zip: 12345,
-  email: "test@mail.com",
-  contactperson: "contactperson",
-  phone: "0123456789"
-};
-
-const insertCustomer = async () => {
-  await db.query(
-    `
-      INSERT
-      INTO customers (name, street, city, zip, email, contactperson, phone)
-      VALUES ($1, $2, $3, $4, $5, $6, $7);
-    `
-    ,
-    [customer.name, customer.street, customer.city, customer.zip, customer.email, customer.contactperson, customer.phone]
-  );
-
-  const query = await db.query(
-    `
-      SELECT id
-      FROM customers
-      WHERE name = $1;
-    `,
-    [customer.name]
-  );
-
-  return query.rows[0].id;
-};
-
-const deleteCustomer = async (customerId) => {
-  await db.query(
-    `
-      DELETE FROM customers
-      WHERE id = $1;
-    `,
-    [customerId]
-  );
-};
-
-const getCustomer = async (customerId) => {
-  const query = await db.query(
-    `
-      SELECT *
-      FROM customers
-      WHERE id = $1;
-    `,
-    [customerId]
-  );
-
-  return query.rows[0];
-};
+const customer = require("./objects/customer");
+const database = require("./functions/database");
 
 describe("Customer service", () => {
   let adminToken = null;
@@ -251,7 +197,7 @@ describe("Customer service", () => {
   test("Request one customer as admin", async () => {
     expect.assertions(3);
 
-    const customerId = await insertCustomer();
+    const customerId = await database.insertCustomer(customer);
 
     const request = await fetch(
       `http://localhost:5050/customer/${customerId}`,
@@ -264,7 +210,7 @@ describe("Customer service", () => {
     );
 
     const response = await request.json();
-    await deleteCustomer(customerId);
+    await database.deleteCustomer(customerId);
 
     expect(response.success).toBe(true);
     expect(response.customer).not.toBe(undefined);
@@ -274,7 +220,7 @@ describe("Customer service", () => {
   test("Request one customer as normal user", async () => {
     expect.assertions(2);
 
-    const customerId = await insertCustomer();
+    const customerId = await database.insertCustomer(customer);
 
     const request = await fetch(
       `http://localhost:5050/customer/${customerId}`,
@@ -287,7 +233,7 @@ describe("Customer service", () => {
     );
 
     const response = await request.json();
-    await deleteCustomer(customerId);
+    await database.deleteCustomer(customerId);
 
     expect(response.success).toBe(false);
     expect(response.customer).toBe(undefined);
@@ -297,7 +243,7 @@ describe("Customer service", () => {
     expect.assertions(2);
 
     // Insert test customer
-    const customerId = await insertCustomer();
+    const customerId = await database.insertCustomer(customer);
 
     // Request deletion of the test customer
     const request = await fetch(`http://localhost:5050/customer/${customerId}`, {
@@ -321,7 +267,7 @@ describe("Customer service", () => {
 
     // Delete the test customer manually, if not done by the request
     if (query.rows.length > 0) {
-      await deleteCustomer(customerId);
+      await database.deleteCustomer(customerId);
     }
 
     // Expectations
@@ -333,7 +279,7 @@ describe("Customer service", () => {
     expect.assertions(2);
 
     // Insert test customer
-    const customerId = await insertCustomer();
+    const customerId = await database.insertCustomer(customer);
 
     // Request deletion of the test customer
     const request = await fetch(`http://localhost:5050/customer/${customerId}`, {
@@ -357,7 +303,7 @@ describe("Customer service", () => {
 
     // Delete the test customer manually, if not done by the request
     if (query.rows.length > 0) {
-      await deleteCustomer(customerId);
+      await database.deleteCustomer(customerId);
     }
 
     // Expectations
@@ -368,7 +314,7 @@ describe("Customer service", () => {
   test("Update customer as admin", async () => {
     expect.assertions(2);
 
-    const customerId = await insertCustomer();
+    const customerId = await database.insertCustomer(customer);
 
     const updatedCustomer = { ...customer };
     updatedCustomer.name = "updatedTestCustomer";
@@ -384,8 +330,8 @@ describe("Customer service", () => {
 
     const response = await request.json();
 
-    const customerInDb = await getCustomer(customerId);
-    await deleteCustomer(customerId);
+    const customerInDb = await database.getCustomer(customerId);
+    await database.deleteCustomer(customerId);
 
     expect(response.success).toBe(true);
     expect(customerInDb.name).toBe(updatedCustomer.name);
@@ -394,7 +340,7 @@ describe("Customer service", () => {
   test("Update customer as normal user", async () => {
     expect.assertions(2);
 
-    const customerId = await insertCustomer();
+    const customerId = await database.insertCustomer(customer);
 
     const updatedCustomer = { ...customer };
     updatedCustomer.name = "updatedTestCustomer";
@@ -410,8 +356,8 @@ describe("Customer service", () => {
 
     const response = await request.json();
 
-    const customerInDb = await getCustomer(customerId);
-    await deleteCustomer(customerId);
+    const customerInDb = await database.getCustomer(customerId);
+    await database.deleteCustomer(customerId);
 
     expect(response.success).toBe(false);
     expect(customerInDb.name).toBe(customer.name);
