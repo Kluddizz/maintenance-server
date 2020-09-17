@@ -2,6 +2,86 @@ const db = require("../../db");
 
 module.exports = {
 
+  insertMaintenance: async (maintenance) => {
+    await db.query(
+      `
+        INSERT INTO maintenances (name, frequency, systemid, userid, stateid)
+        VALUES ($1, $2, $3, $4, $5);
+      `,
+      [
+        maintenance.name,
+        maintenance.frequency,
+        maintenance.systemid,
+        maintenance.userid,
+        maintenance.stateid
+      ]
+    );
+
+    const query = await db.query(
+      `
+        SELECT id
+        FROM maintenances
+        WHERE name = $1
+              AND systemid = $2;
+      `,
+      [
+        maintenance.name,
+        maintenance.systemid
+      ]
+    );
+
+    return query.rows[0].id;
+  },
+
+  deleteMaintenance: async (maintenanceId) => {
+    await db.query(
+      `
+        DELETE
+        FROM maintenances
+        WHERE id = $1;
+      `,
+      [maintenanceId]
+    );
+  },
+
+  insertUser: async (user) => {
+    await db.query(
+      `
+      INSERT INTO users (username, password, firstName, lastName, roleid)
+      VALUES ($1, crypt($2, gen_salt('bf')), $3, $4, $5); 
+    `,
+      [
+        user.username,
+        user.password,
+        user.firstName,
+        user.lastName,
+        user.roleid
+      ]
+    );
+
+    const query = await db.query(
+      `
+        SELECT id
+        FROM users
+        WHERE username = $1;
+      `,
+      [user.username]
+    );
+
+    return query.rows[0].id;
+  },
+  
+  deleteUser: async (userId) => {
+    await db.query(
+      `
+      DELETE
+      FROM users
+      WHERE id = $1;
+    `,
+      [userId]
+    );
+  },
+
 	insertCustomer: async (customer) => {
 		await db.query(
 			`
