@@ -342,7 +342,55 @@ describe("Maintenance service", () => {
   });
 
   test("Delete maintenance as admin", async () => {
+    const maintenanceId = await database.insertMaintenance(maintenance);
 
+    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${adminToken}`
+      }
+    });
+    
+    const response = await request.json();
+    const query = await db.query(
+      `
+        SELECT *
+        FROM maintenances
+        WHERE id = $1;
+      `,
+      [maintenanceId]
+    );
+
+    await database.deleteMaintenance(maintenanceId);
+
+    expect(response.success).toBe(true);
+    expect(query.rows.length).toBe(0);
+  });
+
+  test("Delete maintenance as normal user (should fail)", async () => {
+    const maintenanceId = await database.insertMaintenance(maintenance);
+
+    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${userToken}`
+      }
+    });
+    
+    const response = await request.json();
+    const query = await db.query(
+      `
+        SELECT *
+        FROM maintenances
+        WHERE id = $1;
+      `,
+      [maintenanceId]
+    );
+
+    await database.deleteMaintenance(maintenanceId);
+
+    expect(response.success).toBe(false);
+    expect(query.rows.length).toBeGreaterThan(0);
   });
 
 });
