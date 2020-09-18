@@ -154,7 +154,41 @@ describe("Maintenance service", () => {
   });
 
   test("Get all maintenances as user (should fail)", async () => {
+    expect.assertions(2);
 
+    const numberMaintenances = 10;
+    const ids = [];
+
+    // Insert some maintenances into the database.
+    for (let i = 0; i < numberMaintenances; i++) {
+      const m = { ...maintenance };
+      m.name = m.name + i;
+      m.userid = user.id;
+
+      const mId = await database.insertMaintenance(m);
+      ids.push(mId);
+    }
+
+    // Send API request.
+    const request = await fetch('http://localhost:5050/maintenance', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${userToken}`
+      }
+    });
+
+    // The response is in JSON format.
+    const response = await request.json();
+
+    // Delete all maintenances.
+    for (let i = 0; i < numberMaintenances; i++) {
+      const id = ids[i];
+      await database.deleteMaintenance(id);
+    }
+
+    // Expectations.
+    expect(response.success).toBe(false);
+    expect(response.maintenances).toBeUndefined();
   });
 
   test("Create a new maintenance as admin", async () => {
