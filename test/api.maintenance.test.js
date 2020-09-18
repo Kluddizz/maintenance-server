@@ -1,9 +1,10 @@
 const db = require("../db");
+
 const fetch = require("node-fetch");
 
 const admin = require("./objects/admin");
 const user = require("./objects/user");
-const customer = require("./objects/customer"):
+const customer = require("./objects/customer");
 const system = require("./objects/system");
 const maintenance = require("./objects/maintenance");
 const database = require("./functions/database");
@@ -60,17 +61,51 @@ describe("Maintenance service", () => {
   });
 
   test("Get a maintenance entry", async () => {
+    expect.assertions(3);
+
     // Insert a maintenance manually.
     const maintenanceId = await database.insertMaintenance(maintenance);
     
-    const request = await fetch("http://localhost:5050/maintenance/${maintenanceId}")
+    // Send the API request.
+    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${userToken}`
+      }
+    });
+
+    // The response is in JSON format.
+    const response = await request.json();
 
     // Delete the maintenance.
     await database.deleteMaintenance(maintenanceId);
+
+    // Expectations.
+    expect(response.success).toBe(true);
+    expect(response.maintenance.name).toBe(maintenance.name);
+    expect(response.maintenance.systemid).toBe(maintenance.systemid);
   });
 
   test("Get all maintenances of an user", async () => {
+    // Create a mainenance for a specific user.
+    maintenance.userid = user.id;
+    const maintenanceId = await database.insertMaintenance(maintenance);
 
+    // Send the API request.
+    const request = await fetch(`http://localhost:5050/maintenance/user/${user.id}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${adminToken}`
+      }
+    });
+
+    // The response is in JSON format.
+    const response = await request.json();
+
+    // Delete the maintenance.
+    await database.deleteMaintenance(maintenanceId);
+
+    // Expectations.
   });
 
   test("Get all maintenances as admin", async () => {
