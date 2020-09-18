@@ -275,8 +275,70 @@ describe("Maintenance service", () => {
     expect(query.rows.length).toBe(0);
   });
 
-  test("Edit a mainenance as admin", async () => {
+  test("Edit a maintenance as admin", async () => {
+    expect.assertions(4);
 
+    const maintenanceId = await database.insertMaintenance(maintenance);
+    const modifiedMaintenance = { ...maintenance, name: 'testMaintenanceModified' };
+
+    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(modifiedMaintenance)
+    });
+
+    const query = await db.query(
+      `
+        SELECT *
+        FROM maintenances
+        WHERE id = $1;
+      `,
+      [maintenanceId]
+    );
+
+    const response = await request.json();
+    await database.deleteMaintenance(maintenanceId);
+
+    expect(response.success).toBe(true);
+    expect(query.rows.length).toBeGreaterThan(0);
+    expect(query.rows[0].name).toEqual(modifiedMaintenance.name);
+    expect(query.rows[0].name).not.toEqual(maintenance.name);
+  });
+
+  test("Edit a maintenance as normal user (should fail)", async () => {
+    expect.assertions(4);
+
+    const maintenanceId = await database.insertMaintenance(maintenance);
+    const modifiedMaintenance = { ...maintenance, name: 'testMaintenanceModified' };
+
+    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(modifiedMaintenance)
+    });
+
+    const query = await db.query(
+      `
+        SELECT *
+        FROM maintenances
+        WHERE id = $1;
+      `,
+      [maintenanceId]
+    );
+
+    const response = await request.json();
+    await database.deleteMaintenance(maintenanceId);
+
+    expect(response.success).toBe(false);
+    expect(query.rows.length).toBeGreaterThan(0);
+    expect(query.rows[0].name).not.toEqual(modifiedMaintenance.name);
+    expect(query.rows[0].name).toEqual(maintenance.name);
   });
 
   test("Delete maintenance as admin", async () => {
