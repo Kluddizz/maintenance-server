@@ -87,6 +87,8 @@ describe("Maintenance service", () => {
   });
 
   test("Get all maintenances of an user", async () => {
+    expect.assertions(4);
+
     // Create a mainenance for a specific user.
     maintenance.userid = user.id;
     const maintenanceId = await database.insertMaintenance(maintenance);
@@ -106,6 +108,10 @@ describe("Maintenance service", () => {
     await database.deleteMaintenance(maintenanceId);
 
     // Expectations.
+    expect(response.success).toBe(true);
+    expect(response.maintenances).not.toBe(undefined);
+    expect(response.maintenances.length).toBeGreaterThan(0);
+    expect(response.maintenances[0].userid).toBe(user.id);
   });
 
   test("Get all maintenances as admin", async () => {
