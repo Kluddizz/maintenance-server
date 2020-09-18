@@ -1,25 +1,25 @@
 {
-	"name": "bilfinger-maintenance-auth-server",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"test": "jest",
-		"start": "nodemon index.js"
-	},
-	"author": "",
-	"license": "ISC",
-	"devDependencies": {
-		"jest": "^26.1.0",
-		"node-fetch": "^2.6.0",
-		"nodemon": "^2.0.4"
-	},
-	"dependencies": {
-		"cors": "^2.8.5",
-		"express": "^4.17.1",
-		"express-jwt": "^5.3.3",
-		"helmet": "^3.22.0",
-		"jsonwebtoken": "^8.5.1",
-		"pg": "^8.2.1"
-	}
+  "name": "bilfinger-maintenance-auth-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
+    "start": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^26.1.0",
+    "node-fetch": "^2.6.0",
+    "nodemon": "^2.0.4"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-jwt": "^5.3.3",
+    "helmet": "^3.22.0",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.2.1"
+  }
 }
