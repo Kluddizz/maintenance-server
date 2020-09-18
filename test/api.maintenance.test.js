@@ -192,7 +192,87 @@ describe("Maintenance service", () => {
   });
 
   test("Create a new maintenance as admin", async () => {
+    expect.assertions(2);
 
+    // Send API request.
+    const request = await fetch('http://localhost:5050/maintenance', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(maintenance)
+    });
+
+    // The response is in JSON format.
+    const response = await request.json();
+
+    const query = await db.query(
+      `
+        SELECT *
+        FROM maintenances
+        WHERE name = $1
+              AND systemid = $2;
+      `,
+      [maintenance.name, maintenance.systemid]
+    );
+
+    // Delete the maintenance entry.
+    await db.query(
+      `
+        DELETE
+        FROM maintenances
+        WHERE name = $1
+              AND systemid = $2;
+      `,
+      [maintenance.name, maintenance.systemid]
+    );
+
+    // Expectations.
+    expect(response.success).toBe(true);
+    expect(query.rows.length).toBeGreaterThan(0);
+  });
+
+  test("Create a new maintenance as normal user (should fail)", async () => {
+    expect.assertions(2);
+
+    // Send API request.
+    const request = await fetch('http://localhost:5050/maintenance', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(maintenance)
+    });
+
+    // The response is in JSON format.
+    const response = await request.json();
+
+    const query = await db.query(
+      `
+        SELECT *
+        FROM maintenances
+        WHERE name = $1
+              AND systemid = $2;
+      `,
+      [maintenance.name, maintenance.systemid]
+    );
+
+    // Delete the maintenance entry.
+    await db.query(
+      `
+        DELETE
+        FROM maintenances
+        WHERE name = $1
+              AND systemid = $2;
+      `,
+      [maintenance.name, maintenance.systemid]
+    );
+
+    // Expectations.
+    expect(response.success).toBe(false);
+    expect(query.rows.length).toBe(0);
   });
 
   test("Edit a mainenance as admin", async () => {
