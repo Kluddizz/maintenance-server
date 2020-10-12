@@ -6,7 +6,7 @@ const db = require("../db");
 
 router.get(
   "/user/:userId",
-  access({ roles: ["admin"], dataOwner: req => req.params.userId }),
+  access({ roles: ["admin"], dataOwner: (req) => req.params.userId }),
   async (req, res) => {
     const { userId } = req.params;
 
@@ -22,7 +22,7 @@ router.get(
     res.status(200).json({
       success: true,
       message: "Fetched maintenances",
-      maintenances: query.rows
+      maintenances: query.rows,
     });
   }
 );
@@ -30,8 +30,14 @@ router.get(
 router.get("/", access({ roles: ["admin"] }), async (req, res) => {
   const query = await db.query(
     `
-      SELECT *
-      FROM maintenances;
+      SELECT maintenances.*, customers.name as customer_name, states.name as state_name, states.color as state_color
+      FROM maintenances
+      JOIN states
+        ON maintenances.stateid = states.id
+      JOIN systems
+        ON maintenances.systemid = systems.id
+      JOIN customers
+        ON systems.customerid = customers.id;
     `,
     []
   );
@@ -39,7 +45,7 @@ router.get("/", access({ roles: ["admin"] }), async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Fetched all maintenances",
-    maintenances: query.rows
+    maintenances: query.rows,
   });
 });
 
@@ -59,13 +65,13 @@ router.get("/:id", async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Fetched maintenance",
-      maintenance: query.rows[0]
+      maintenance: query.rows[0],
     });
   } else {
     res.status(400).json({
       success: false,
       message:
-        "There is no maintenance entry for the requesting user with the given ID"
+        "There is no maintenance entry for the requesting user with the given ID",
     });
   }
 });
@@ -84,12 +90,12 @@ router.post("/", access({ roles: ["admin"] }), async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Created new maintenance"
+      message: "Created new maintenance",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not create new maintenance"
+      message: "Could not create new maintenance",
     });
   }
 });
@@ -110,12 +116,12 @@ router.put("/:id", access({ roles: ["admin"] }), async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Updated maintenance"
+      message: "Updated maintenance",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not update maintenance"
+      message: "Could not update maintenance",
     });
   }
 });
@@ -135,12 +141,12 @@ router.delete("/:id", access({ roles: ["admin"] }), async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Deleted maintenance"
+      message: "Deleted maintenance",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not delete maintenance"
+      message: "Could not delete maintenance",
     });
   }
 });
