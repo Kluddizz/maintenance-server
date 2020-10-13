@@ -22,10 +22,10 @@ SET row_security = off;
 
 COPY public.states (id, name, color) FROM stdin;
 1	Ausstehend	#c4c4c4
-2	In Bearbeitung	#ffff66
-3	Abgeschlossen	#66ff66
 4	Protokoll angefertigt	#666bff
-5	Bezahlt	#66ffcc
+2	In Bearbeitung	#ffe466
+5	Bezahlt	#66daff
+3	Abgeschlossen	#52cd54
 \.
 
 
@@ -33,7 +33,7 @@ COPY public.states (id, name, color) FROM stdin;
 -- Name: states_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.states_id_seq', 7, true);
+SELECT pg_catalog.setval('public.states_id_seq', 8, true);
 
 
 --
