@@ -32,11 +32,11 @@ router.get("/", access({ roles: ["admin"] }), async (req, res) => {
     `
       SELECT maintenances.*, customers.name as customer_name, states.name as state_name, states.color as state_color
       FROM maintenances
-      JOIN states
+      LEFT JOIN states
         ON maintenances.stateid = states.id
-      JOIN systems
+      LEFT JOIN systems
         ON maintenances.systemid = systems.id
-      JOIN customers
+      LEFT JOIN customers
         ON systems.customerid = customers.id;
     `,
     []

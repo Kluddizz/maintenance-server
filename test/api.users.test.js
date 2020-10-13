@@ -1,4 +1,5 @@
 const db = require("../db");
+const database = require("./functions/database");
 const fetch = require("node-fetch");
 
 const user = require("./objects/user");
@@ -7,38 +8,24 @@ describe("User", () => {
   let token = null;
 
   beforeAll(async () => {
-    await db.query(
-      `
-      INSERT INTO users (username, password, firstName, lastName, roleid)
-      VALUES ($1, crypt($2, gen_salt('bf')), $3, $4, $5); 
-    `,
-      [user.username, user.password, user.firstName, user.lastName, user.roleid]
-    );
+    user.id = await database.insertUser(user);
   });
 
   afterAll(async () => {
-    await db.query(
-      `
-      DELETE
-      FROM users
-      WHERE username = $1;
-    `,
-      [user.username]
-    );
-
-    await db.close();
+    await database.deleteUser(user.id);
+    user.id = undefined;
   });
 
   beforeAll(async () => {
     const request = await fetch("http://localhost:5050/login", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         username: user.username,
-        password: user.password
-      })
+        password: user.password,
+      }),
     });
 
     const response = await request.json();
@@ -48,11 +35,11 @@ describe("User", () => {
   it("Valid get request", async () => {
     expect.assertions(4);
 
-    const request = await fetch("http://localhost:5050/users", {
+    const request = await fetch(`http://localhost:5050/users/${user.id}`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const response = await request.json();
@@ -72,11 +59,11 @@ describe("User", () => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        username: newUsername
-      })
+        username: newUsername,
+      }),
     });
 
     const response1 = await request1.json();
@@ -85,12 +72,12 @@ describe("User", () => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         username: user.username,
-        password: user.password
-      })
+        password: user.password,
+      }),
     });
 
     const response2 = await request2.json();
@@ -110,8 +97,8 @@ describe("User", () => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const response = await request.json();
@@ -126,8 +113,8 @@ describe("User", () => {
     const request = await fetch("http://localhost:5050/users", {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}a`
-      }
+        Authorization: `Bearer ${token}a`,
+      },
     });
 
     const response = await request.json();
@@ -138,7 +125,7 @@ describe("User", () => {
     expect.assertions(1);
 
     const request = await fetch("http://localhost:5050/users", {
-      method: "GET"
+      method: "GET",
     });
 
     const response = await request.json();

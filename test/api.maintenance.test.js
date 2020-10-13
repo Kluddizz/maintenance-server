@@ -23,34 +23,27 @@ describe("Maintenance service", () => {
     system.customerid = customer.id;
     system.id = await database.insertSystem(system);
     maintenance.systemid = system.id;
-  });
 
-  afterAll(async () => {
-    await database.deleteUser(admin.id);
-    await database.deleteUser(user.id);
-  });
-
-  beforeAll(async () => {
     const requestAdmin = await fetch("http://localhost:5050/login", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         username: admin.username,
-        password: admin.password
-      })
+        password: admin.password,
+      }),
     });
 
     const requestUser = await fetch("http://localhost:5050/login", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         username: user.username,
-        password: user.password
-      })
+        password: user.password,
+      }),
     });
 
     const responseAdmin = await requestAdmin.json();
@@ -60,19 +53,29 @@ describe("Maintenance service", () => {
     userToken = responseUser.token;
   });
 
+  afterAll(async () => {
+    await database.deleteUser(admin.id);
+    await database.deleteUser(user.id);
+    user.id = undefined;
+    admin.id = undefined;
+  });
+
   test("Get a maintenance entry", async () => {
     expect.assertions(3);
 
     // Insert a maintenance manually.
     const maintenanceId = await database.insertMaintenance(maintenance);
-    
+
     // Send the API request.
-    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${userToken}`
+    const request = await fetch(
+      `http://localhost:5050/maintenance/${maintenanceId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       }
-    });
+    );
 
     // The response is in JSON format.
     const response = await request.json();
@@ -94,12 +97,15 @@ describe("Maintenance service", () => {
     const maintenanceId = await database.insertMaintenance(maintenance);
 
     // Send the API request.
-    const request = await fetch(`http://localhost:5050/maintenance/user/${user.id}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${adminToken}`
+    const request = await fetch(
+      `http://localhost:5050/maintenance/user/${user.id}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       }
-    });
+    );
 
     // The response is in JSON format.
     const response = await request.json();
@@ -120,6 +126,18 @@ describe("Maintenance service", () => {
     const numberMaintenances = 10;
     const ids = [];
 
+    const beforeInsertRequest = await fetch(
+      "http://localhost:5050/maintenance",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+        },
+      }
+    );
+
+    const beforeInsertResponse = await beforeInsertRequest.json();
+
     // Insert some maintenances into the database.
     for (let i = 0; i < numberMaintenances; i++) {
       const m = { ...maintenance };
@@ -131,11 +149,11 @@ describe("Maintenance service", () => {
     }
 
     // Send API request.
-    const request = await fetch('http://localhost:5050/maintenance', {
-      method: 'GET',
+    const request = await fetch("http://localhost:5050/maintenance", {
+      method: "GET",
       headers: {
-        Authorization: `Bearer ${adminToken}`
-      }
+        Authorization: `Bearer ${adminToken}`,
+      },
     });
 
     // The response is in JSON format.
@@ -150,7 +168,9 @@ describe("Maintenance service", () => {
     // Expectations.
     expect(response.success).toBe(true);
     expect(response.maintenances).not.toBeUndefined();
-    expect(response.maintenances.length).toBe(numberMaintenances);
+    expect(response.maintenances.length).toBe(
+      numberMaintenances + beforeInsertResponse.maintenances.length
+    );
   });
 
   test("Get all maintenances as user (should fail)", async () => {
@@ -170,11 +190,11 @@ describe("Maintenance service", () => {
     }
 
     // Send API request.
-    const request = await fetch('http://localhost:5050/maintenance', {
-      method: 'GET',
+    const request = await fetch("http://localhost:5050/maintenance", {
+      method: "GET",
       headers: {
-        Authorization: `Bearer ${userToken}`
-      }
+        Authorization: `Bearer ${userToken}`,
+      },
     });
 
     // The response is in JSON format.
@@ -195,13 +215,13 @@ describe("Maintenance service", () => {
     expect.assertions(2);
 
     // Send API request.
-    const request = await fetch('http://localhost:5050/maintenance', {
-      method: 'POST',
+    const request = await fetch("http://localhost:5050/maintenance", {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${adminToken}`,
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(maintenance)
+      body: JSON.stringify(maintenance),
     });
 
     // The response is in JSON format.
@@ -237,13 +257,13 @@ describe("Maintenance service", () => {
     expect.assertions(2);
 
     // Send API request.
-    const request = await fetch('http://localhost:5050/maintenance', {
-      method: 'POST',
+    const request = await fetch("http://localhost:5050/maintenance", {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${userToken}`,
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(maintenance)
+      body: JSON.stringify(maintenance),
     });
 
     // The response is in JSON format.
@@ -279,16 +299,22 @@ describe("Maintenance service", () => {
     expect.assertions(4);
 
     const maintenanceId = await database.insertMaintenance(maintenance);
-    const modifiedMaintenance = { ...maintenance, name: 'testMaintenanceModified' };
+    const modifiedMaintenance = {
+      ...maintenance,
+      name: "testMaintenanceModified",
+    };
 
-    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${adminToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(modifiedMaintenance)
-    });
+    const request = await fetch(
+      `http://localhost:5050/maintenance/${maintenanceId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(modifiedMaintenance),
+      }
+    );
 
     const query = await db.query(
       `
@@ -312,16 +338,22 @@ describe("Maintenance service", () => {
     expect.assertions(4);
 
     const maintenanceId = await database.insertMaintenance(maintenance);
-    const modifiedMaintenance = { ...maintenance, name: 'testMaintenanceModified' };
+    const modifiedMaintenance = {
+      ...maintenance,
+      name: "testMaintenanceModified",
+    };
 
-    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${userToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(modifiedMaintenance)
-    });
+    const request = await fetch(
+      `http://localhost:5050/maintenance/${maintenanceId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(modifiedMaintenance),
+      }
+    );
 
     const query = await db.query(
       `
@@ -344,13 +376,16 @@ describe("Maintenance service", () => {
   test("Delete maintenance as admin", async () => {
     const maintenanceId = await database.insertMaintenance(maintenance);
 
-    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${adminToken}`
+    const request = await fetch(
+      `http://localhost:5050/maintenance/${maintenanceId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+        },
       }
-    });
-    
+    );
+
     const response = await request.json();
     const query = await db.query(
       `
@@ -370,13 +405,16 @@ describe("Maintenance service", () => {
   test("Delete maintenance as normal user (should fail)", async () => {
     const maintenanceId = await database.insertMaintenance(maintenance);
 
-    const request = await fetch(`http://localhost:5050/maintenance/${maintenanceId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${userToken}`
+    const request = await fetch(
+      `http://localhost:5050/maintenance/${maintenanceId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       }
-    });
-    
+    );
+
     const response = await request.json();
     const query = await db.query(
       `
@@ -392,5 +430,4 @@ describe("Maintenance service", () => {
     expect(response.success).toBe(false);
     expect(query.rows.length).toBeGreaterThan(0);
   });
-
 });

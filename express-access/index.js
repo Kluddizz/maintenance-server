@@ -1,7 +1,7 @@
-const access = options => {
+const access = (options) => {
   const roleMap = {
     0: "admin",
-    1: "user"
+    1: "user",
   };
 
   return (req, res, next) => {
@@ -13,12 +13,15 @@ const access = options => {
         next();
       } else if (options.where && options.where(req)) {
         next();
-      } else if (options.dataOwner && req.user.id === options.dataOwner(req)) {
+      } else if (
+        options.dataOwner &&
+        req.user.id === parseInt(options.dataOwner(req))
+      ) {
         next();
       } else {
-        res.status(200).json({
+        res.status(403).json({
           success: false,
-          message: "You don't have the permission to do this"
+          message: "You don't have the permission to do this",
         });
       }
     } else {
