@@ -102,16 +102,16 @@ router.post("/", access({ roles: ["admin"] }), async (req, res) => {
 
 router.put("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
-  const { name, frequency, systemid, userid, stateid } = req.body;
+  const { name, frequency, systemid, userid, stateid, start_date } = req.body;
 
   try {
     const query = await db.query(
       `
         UPDATE maintenances
-        SET name = $1, frequency = $2, systemid = $3, userid = $4, stateid = $5
-        WHERE id = $6;
+        SET name = $1, frequency = $2, systemid = $3, userid = $4, stateid = $5, start_date = $6
+        WHERE id = $7;
       `,
-      [name, frequency, systemid, userid, stateid, id]
+      [name, frequency, systemid, userid, stateid, start_date, id]
     );
 
     res.status(200).json({
@@ -119,6 +119,7 @@ router.put("/:id", access({ roles: ["admin"] }), async (req, res) => {
       message: "Updated maintenance",
     });
   } catch (err) {
+    console.log(err.message);
     res.status(400).json({
       success: false,
       message: "Could not update maintenance",
