@@ -119,7 +119,8 @@ CREATE TABLE public.maintenances (
     frequency integer,
     systemid integer NOT NULL,
     userid integer,
-    stateid integer
+    stateid integer DEFAULT 1,
+    start_date timestamp without time zone DEFAULT now()
 );
 
 
@@ -187,7 +188,8 @@ ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 
 CREATE TABLE public.states (
     id integer NOT NULL,
-    name character varying(50) NOT NULL
+    name character varying(50) NOT NULL,
+    color character varying(7)
 );
 
 
@@ -379,128 +381,6 @@ ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
-
-
---
--- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.customers (id, name, street, city, zip, email, contactperson, phone) FROM stdin;
-\.
-
-
---
--- Data for Name: maintenance_tag_assignments; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.maintenance_tag_assignments (id, maintenanceid, tagid) FROM stdin;
-\.
-
-
---
--- Data for Name: maintenances; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.maintenances (id, name, frequency, systemid, userid, stateid) FROM stdin;
-\.
-
-
---
--- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.roles (id, name) FROM stdin;
-0	Administrator
-1	Maintenancer
-\.
-
-
---
--- Data for Name: states; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.states (id, name) FROM stdin;
-\.
-
-
---
--- Data for Name: systems; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.systems (id, name, street, city, zip, customerid) FROM stdin;
-\.
-
-
---
--- Data for Name: tags; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.tags (id, name) FROM stdin;
-\.
-
-
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.users (id, username, password, firstname, lastname, roleid) FROM stdin;
-\.
-
-
---
--- Name: customers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.customers_id_seq', 8, true);
-
-
---
--- Name: maintenance_tag_assignments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.maintenance_tag_assignments_id_seq', 1, false);
-
-
---
--- Name: maintenances_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.maintenances_id_seq', 1, false);
-
-
---
--- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.roles_id_seq', 1, false);
-
-
---
--- Name: states_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.states_id_seq', 1, false);
-
-
---
--- Name: systems_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.systems_id_seq', 9, true);
-
-
---
--- Name: tags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.tags_id_seq', 1, false);
-
-
---
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.users_id_seq', 21, true);
 
 
 --
