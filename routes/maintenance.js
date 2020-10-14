@@ -77,15 +77,15 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", access({ roles: ["admin"] }), async (req, res) => {
-  const { name, frequency, systemid, userid, stateid } = req.body;
+  const { name, frequency, systemid, userid, stateid, start_date } = req.body;
 
   try {
     const query = await db.query(
       `
-      INSERT INTO maintenances (name, frequency, systemid, userid, stateid)
-      VALUES ($1, $2, $3, $4, $5);
+      INSERT INTO maintenances (name, frequency, systemid, userid, stateid, start_date)
+      VALUES ($1, $2, $3, $4, $5, $6);
     `,
-      [name, frequency, systemid, userid, stateid]
+      [name, frequency, systemid, userid, stateid, start_date]
     );
 
     res.status(200).json({
