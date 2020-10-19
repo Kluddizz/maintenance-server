@@ -5,6 +5,39 @@ const router = express.Router();
 const db = require("../db");
 
 router.get(
+  "/statistics/state/:stateId",
+  access({ roles: ["admin"] }),
+  async (req, res) => {
+    const { stateId } = req.params;
+
+    const stateQuery = await db.query(
+      `
+      SELECT COUNT(id)
+      FROM maintenances
+      WHERE stateid = $1;
+      `,
+      [stateId]
+    );
+
+    const totalQuery = await db.query(
+      `
+      SELECT COUNT(id)
+      FROM maintenances;
+      `,
+      []
+    );
+
+    res.status(200).json({
+      success: true,
+      statistics: {
+        total: totalQuery.rows[0]?.count,
+        actual: stateQuery.rows[0]?.count,
+      },
+    });
+  }
+);
+
+router.get(
   "/user/:userId",
   access({ roles: ["admin"], dataOwner: (req) => req.params.userId }),
   async (req, res) => {
