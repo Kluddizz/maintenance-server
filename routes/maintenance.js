@@ -63,7 +63,11 @@ router.get(
 router.get("/", access({ roles: ["admin"] }), async (req, res) => {
   const query = await db.query(
     `
-      SELECT maintenances.*, customers.name as customer_name, states.name as state_name, states.color as state_color
+      SELECT maintenances.*,
+             customers.name as customer_name,
+             states.name as state_name,
+             states.color as state_color,
+             due_date(maintenances.start_date, maintenances.frequency) as due_date
       FROM maintenances
       LEFT JOIN states
         ON maintenances.stateid = states.id
