@@ -1,0 +1,63 @@
+@startuml
+
+entity User {
+  +id
+  --
+  ~username
+  ~password
+  ~firstName
+  ~lastName
+  --
+  #roleId
+}
+
+entity System {
+  +id
+  --
+  ~name
+  ~street
+  ~city
+  ~zip
+  --
+  #customerId
+}
+
+entity Maintenance {
+  +id
+  --
+  ~name
+  ~frequency
+  --
+  #systemId
+  #userId
+  #stateId
+}
+
+entity Customer {
+  +id
+  --
+  ~name
+  ~street
+  ~city
+  ~zip
+}
+
+entity State {
+  +id
+  --
+  ~name
+}
+
+entity Role {
+  +id
+  --
+  ~name
+}
+
+Customer -right-{ System
+System -right-{ Maintenance
+Maintenance }-- State
+User }-right- Role
+User -left-{ Maintenance
+  
+@enduml
