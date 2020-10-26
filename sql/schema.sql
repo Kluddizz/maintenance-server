@@ -30,6 +30,61 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
+--
+-- Name: due_date(timestamp with time zone, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.due_date(start timestamp with time zone, freq integer) RETURNS timestamp with time zone
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  today timestamp with time zone := NOW();
+  month integer;
+  month_in_future integer;
+BEGIN
+  IF start < today THEN
+    SELECT month_diff(today, start) INTO month;
+    SELECT month + freq - (month % freq) INTO month_in_future;
+    RETURN start + month_in_future * interval '1 month';
+  ELSE
+    RETURN start;
+  END IF;
+END;
+$$;
+
+
+ALTER FUNCTION public.due_date(start timestamp with time zone, freq integer) OWNER TO postgres;
+
+--
+-- Name: month_diff(timestamp without time zone, timestamp without time zone); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.month_diff(d1 timestamp without time zone, d2 timestamp without time zone) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+RETURN ((EXTRACT(YEAR FROM d1) - EXTRACT(YEAR FROM d2)) * 12 + EXTRACT(MONTH FROM d1) - EXTRACT(MONTH FROM d2));
+END;
+$$;
+
+
+ALTER FUNCTION public.month_diff(d1 timestamp without time zone, d2 timestamp without time zone) OWNER TO postgres;
+
+--
+-- Name: month_diff(timestamp with time zone, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.month_diff(d1 timestamp with time zone, d2 timestamp with time zone) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+begin
+  return ((extract(year from d1) - extract(year from d2)) * 12 + extract(month from d1) - extract(month from d2));
+end;
+$$;
+
+
+ALTER FUNCTION public.month_diff(d1 timestamp with time zone, d2 timestamp with time zone) OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -72,41 +127,6 @@ ALTER TABLE public.customers_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
-
-
---
--- Name: maintenance_tag_assignments; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.maintenance_tag_assignments (
-    id integer NOT NULL,
-    maintenanceid integer NOT NULL,
-    tagid integer NOT NULL
-);
-
-
-ALTER TABLE public.maintenance_tag_assignments OWNER TO postgres;
-
---
--- Name: maintenance_tag_assignments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.maintenance_tag_assignments_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.maintenance_tag_assignments_id_seq OWNER TO postgres;
-
---
--- Name: maintenance_tag_assignments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.maintenance_tag_assignments_id_seq OWNED BY public.maintenance_tag_assignments.id;
 
 
 --
@@ -256,40 +276,6 @@ ALTER SEQUENCE public.systems_id_seq OWNED BY public.systems.id;
 
 
 --
--- Name: tags; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.tags (
-    id integer NOT NULL,
-    name character varying(50) NOT NULL
-);
-
-
-ALTER TABLE public.tags OWNER TO postgres;
-
---
--- Name: tags_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.tags_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.tags_id_seq OWNER TO postgres;
-
---
--- Name: tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.tags_id_seq OWNED BY public.tags.id;
-
-
---
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -335,13 +321,6 @@ ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.cu
 
 
 --
--- Name: maintenance_tag_assignments id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.maintenance_tag_assignments ALTER COLUMN id SET DEFAULT nextval('public.maintenance_tag_assignments_id_seq'::regclass);
-
-
---
 -- Name: maintenances id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -370,13 +349,6 @@ ALTER TABLE ONLY public.systems ALTER COLUMN id SET DEFAULT nextval('public.syst
 
 
 --
--- Name: tags id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
-
-
---
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -389,14 +361,6 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 ALTER TABLE ONLY public.customers
     ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
-
-
---
--- Name: maintenance_tag_assignments maintenance_tag_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.maintenance_tag_assignments
-    ADD CONSTRAINT maintenance_tag_assignments_pkey PRIMARY KEY (id);
 
 
 --
@@ -432,35 +396,11 @@ ALTER TABLE ONLY public.systems
 
 
 --
--- Name: tags tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.tags
-    ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
-
-
---
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: maintenance_tag_assignments maintenance_tag_assignments_maintenanceid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.maintenance_tag_assignments
-    ADD CONSTRAINT maintenance_tag_assignments_maintenanceid_fkey FOREIGN KEY (maintenanceid) REFERENCES public.maintenances(id) ON DELETE CASCADE;
-
-
---
--- Name: maintenance_tag_assignments maintenance_tag_assignments_tagid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.maintenance_tag_assignments
-    ADD CONSTRAINT maintenance_tag_assignments_tagid_fkey FOREIGN KEY (tagid) REFERENCES public.tags(id) ON DELETE CASCADE;
 
 
 --

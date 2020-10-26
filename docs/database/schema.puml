@@ -27,6 +27,7 @@ entity Maintenance {
   --
   ~name
   ~frequency
+  ~start_date
   --
   #systemId
   #userId
@@ -40,6 +41,9 @@ entity Customer {
   ~street
   ~city
   ~zip
+  ~email
+  ~contactperson
+  ~phone
 }
 
 entity State {
