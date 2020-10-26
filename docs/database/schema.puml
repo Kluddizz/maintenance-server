@@ -1,4 +1,5 @@
 @startuml
+!includeurl https://raw.githubusercontent.com/bschwarz/puml-themes/master/themes/cerulean/puml-theme-cerulean.puml
 
 entity User {
   +id
