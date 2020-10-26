@@ -60,29 +60,60 @@ router.get(
   }
 );
 
-router.get("/", access({ roles: ["admin"] }), async (req, res) => {
-  const query = await db.query(
-    `
-      SELECT maintenances.*,
-             customers.name as customer_name,
-             states.name as state_name,
-             states.color as state_color,
-             due_date(maintenances.start_date, maintenances.frequency) as due_date
-      FROM maintenances
-      LEFT JOIN states
-        ON maintenances.stateid = states.id
-      LEFT JOIN systems
-        ON maintenances.systemid = systems.id
-      LEFT JOIN customers
-        ON systems.customerid = customers.id;
-    `,
-    []
-  );
+router.get("/:year?", access({ roles: ["admin"] }), async (req, res) => {
+  const { year } = req.params;
+
+  let maintenances;
+
+  if (year) {
+    // There is a year provided, so return the entries of this year only.
+    const query = await db.query(
+      `
+        SELECT maintenances.*,
+               customers.name as customer_name,
+               states.name as state_name,
+               states.color as state_color,
+               due_date(maintenances.start_date, maintenances.frequency) as due_date
+        FROM maintenances
+        LEFT JOIN states
+          ON maintenances.stateid = states.id
+        LEFT JOIN systems
+          ON maintenances.systemid = systems.id
+        LEFT JOIN customers
+          ON systems.customerid = customers.id
+        WHERE EXTRACT(YEAR FROM (due_date(maintenances.start_date, maintenances.frequency))) = $1;
+      `,
+      [year]
+    );
+
+    maintenances = query.rows;
+  } else {
+    // There is no year provided, so return all entries.
+    const query = await db.query(
+      `
+        SELECT maintenances.*,
+               customers.name as customer_name,
+               states.name as state_name,
+               states.color as state_color,
+               due_date(maintenances.start_date, maintenances.frequency) as due_date
+        FROM maintenances
+        LEFT JOIN states
+          ON maintenances.stateid = states.id
+        LEFT JOIN systems
+          ON maintenances.systemid = systems.id
+        LEFT JOIN customers
+          ON systems.customerid = customers.id;
+      `,
+      []
+    );
+
+    maintenances = query.rows;
+  }
 
   res.status(200).json({
     success: true,
     message: "Fetched all maintenances",
-    maintenances: query.rows,
+    maintenances: maintenances,
   });
 });
 
