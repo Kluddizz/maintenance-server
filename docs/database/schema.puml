@@ -59,10 +59,19 @@ entity Role {
   ~name
 }
 
+entity Appointment {
+  +id
+  --
+  ~date
+  --
+  #maintenanceId
+}
+
 Customer -right-{ System
 System -right-{ Maintenance
 Maintenance }-- State
 User }-right- Role
 User -left-{ Maintenance
+Maintenance -up-{ Appointment
   
 @enduml
