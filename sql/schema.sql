@@ -90,6 +90,34 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: appointments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.appointments (
+    id integer NOT NULL,
+    date timestamp with time zone DEFAULT now(),
+    maintenanceid integer NOT NULL,
+    stateid integer NOT NULL
+);
+
+
+ALTER TABLE public.appointments OWNER TO postgres;
+
+--
+-- Name: appointments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.appointments ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.appointments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: customers; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -139,7 +167,6 @@ CREATE TABLE public.maintenances (
     frequency integer,
     systemid integer NOT NULL,
     userid integer,
-    stateid integer DEFAULT 1,
     start_date timestamp without time zone DEFAULT now()
 );
 
@@ -356,6 +383,14 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
+-- Name: appointments appointments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointments
+    ADD CONSTRAINT appointments_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -404,11 +439,19 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: maintenances maintenances_stateid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: appointments appointments_maintenanceid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.maintenances
-    ADD CONSTRAINT maintenances_stateid_fkey FOREIGN KEY (stateid) REFERENCES public.states(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.appointments
+    ADD CONSTRAINT appointments_maintenanceid_fkey FOREIGN KEY (maintenanceid) REFERENCES public.maintenances(id);
+
+
+--
+-- Name: appointments appointments_stateid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.appointments
+    ADD CONSTRAINT appointments_stateid_fkey FOREIGN KEY (stateid) REFERENCES public.states(id);
 
 
 --

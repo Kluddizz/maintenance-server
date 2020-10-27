@@ -13,8 +13,9 @@ router.get(
     const stateQuery = await db.query(
       `
       SELECT COUNT(id)
-      FROM maintenances
-      WHERE stateid = $1;
+      FROM appointments
+      WHERE stateid = $1
+            AND EXTRACT(YEAR FROM date) = EXTRACT(YEAR FROM NOW());
       `,
       [stateId]
     );
@@ -22,7 +23,8 @@ router.get(
     const totalQuery = await db.query(
       `
       SELECT COUNT(id)
-      FROM maintenances;
+      FROM maintenances
+      WHERE EXTRACT(YEAR FROM due_date(start_date, frequency)) = EXTRACT(YEAR FROM NOW());
       `,
       []
     );
@@ -69,19 +71,23 @@ router.get("/:year?", access({ roles: ["admin"] }), async (req, res) => {
     // There is a year provided, so return the entries of this year only.
     const query = await db.query(
       `
-        SELECT maintenances.*,
-               customers.name as customer_name,
-               states.name as state_name,
-               states.color as state_color,
-               due_date(maintenances.start_date, maintenances.frequency) as due_date
-        FROM maintenances
-        LEFT JOIN states
-          ON maintenances.stateid = states.id
-        LEFT JOIN systems
-          ON maintenances.systemid = systems.id
-        LEFT JOIN customers
-          ON systems.customerid = customers.id
-        WHERE EXTRACT(YEAR FROM (due_date(maintenances.start_date, maintenances.frequency))) = $1;
+      SELECT maintenances.*,
+             customers.name as customer_name,
+             due_date(maintenances.start_date, maintenances.frequency) as due_date,
+             CASE WHEN states.name IS NULL THEN 'Ausstehend' ELSE states.name END AS state_name,
+             CASE WHEN states.color IS NULL THEN '#c4c4c4' ELSE states.color END AS state_color
+      FROM maintenances
+      LEFT JOIN systems
+        ON maintenances.systemid = systems.id
+      LEFT JOIN customers
+        ON systems.customerid = customers.id
+      LEFT JOIN appointments
+        ON appointments.maintenanceid = maintenances.id
+           AND appointments.date = due_date(maintenances.start_date, maintenances.frequency)
+      LEFT JOIN states
+        ON states.id = appointments.stateid
+      WHERE EXTRACT(YEAR FROM (due_date(maintenances.start_date, maintenances.frequency))) = $1
+      ORDER BY due_date;
       `,
       [year]
     );
@@ -91,18 +97,22 @@ router.get("/:year?", access({ roles: ["admin"] }), async (req, res) => {
     // There is no year provided, so return all entries.
     const query = await db.query(
       `
-        SELECT maintenances.*,
-               customers.name as customer_name,
-               states.name as state_name,
-               states.color as state_color,
-               due_date(maintenances.start_date, maintenances.frequency) as due_date
-        FROM maintenances
-        LEFT JOIN states
-          ON maintenances.stateid = states.id
-        LEFT JOIN systems
-          ON maintenances.systemid = systems.id
-        LEFT JOIN customers
-          ON systems.customerid = customers.id;
+      SELECT maintenances.*,
+             customers.name as customer_name,
+             due_date(maintenances.start_date, maintenances.frequency) as due_date,
+             CASE WHEN states.name IS NULL THEN 'Ausstehend' ELSE states.name END AS state_name,
+             CASE WHEN states.color IS NULL THEN '#c4c4c4' ELSE states.color END AS state_color
+      FROM maintenances
+      LEFT JOIN systems
+        ON maintenances.systemid = systems.id
+      LEFT JOIN customers
+        ON systems.customerid = customers.id
+      LEFT JOIN appointments
+        ON appointments.maintenanceid = maintenances.id
+           AND appointments.date = due_date(maintenances.start_date, maintenances.frequency)
+      LEFT JOIN states
+        ON states.id = appointments.stateid
+      ORDER BY due_date;
       `,
       []
     );
@@ -145,15 +155,15 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", access({ roles: ["admin"] }), async (req, res) => {
-  const { name, frequency, systemid, userid, stateid, start_date } = req.body;
+  const { name, frequency, systemid, userid, start_date } = req.body;
 
   try {
     const query = await db.query(
       `
-      INSERT INTO maintenances (name, frequency, systemid, userid, stateid, start_date)
+      INSERT INTO maintenances (name, frequency, systemid, userid, start_date)
       VALUES ($1, $2, $3, $4, $5, $6);
     `,
-      [name, frequency, systemid, userid, stateid, start_date]
+      [name, frequency, systemid, userid, start_date]
     );
 
     res.status(200).json({
@@ -170,16 +180,16 @@ router.post("/", access({ roles: ["admin"] }), async (req, res) => {
 
 router.put("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
-  const { name, frequency, systemid, userid, stateid, start_date } = req.body;
+  const { name, frequency, systemid, userid, start_date } = req.body;
 
   try {
     const query = await db.query(
       `
         UPDATE maintenances
-        SET name = $1, frequency = $2, systemid = $3, userid = $4, stateid = $5, start_date = $6
+        SET name = $1, frequency = $2, systemid = $3, userid = $4, start_date = $6
         WHERE id = $7;
       `,
-      [name, frequency, systemid, userid, stateid, start_date, id]
+      [name, frequency, systemid, userid, start_date, id]
     );
 
     res.status(200).json({
