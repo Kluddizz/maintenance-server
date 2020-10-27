@@ -32,7 +32,6 @@ entity Maintenance {
   --
   #systemId
   #userId
-  #appointmentId
 }
 
 entity Customer {
