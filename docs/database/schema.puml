@@ -32,7 +32,7 @@ entity Maintenance {
   --
   #systemId
   #userId
-  #stateId
+  #appointmentId
 }
 
 entity Customer {
@@ -65,13 +65,14 @@ entity Appointment {
   ~date
   --
   #maintenanceId
+  #stateId
 }
 
 Customer -right-{ System
 System -right-{ Maintenance
-Maintenance }-- State
+Appointment }-- State
 User }-right- Role
 User -left-{ Maintenance
-Maintenance -up-{ Appointment
+Maintenance -down-{ Appointment
   
 @enduml
