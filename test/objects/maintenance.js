@@ -1,9 +1,9 @@
 const maintenance = {
   name: "testMaintenance",
-  frequency: 0,
+  frequency: 1,
   systemid: null,
   userid: null,
-  stateid: null
+  start_date: new Date()
 };
 
 module.exports = maintenance;

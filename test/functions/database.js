@@ -27,7 +27,7 @@ module.exports = {
   insertMaintenance: async (maintenance) => {
     await db.query(
       `
-        INSERT INTO maintenances (name, frequency, systemid, userid, stateid)
+        INSERT INTO maintenances (name, frequency, systemid, userid, start_date)
         VALUES ($1, $2, $3, $4, $5);
       `,
       [
@@ -35,7 +35,7 @@ module.exports = {
         maintenance.frequency,
         maintenance.systemid,
         maintenance.userid,
-        maintenance.stateid,
+        maintenance.start_date,
       ]
     );
 

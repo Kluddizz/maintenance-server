@@ -72,7 +72,7 @@ describe("Maintenance service", () => {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${userToken}`,
+          Authorization: `Bearer ${adminToken}`,
         },
       }
     );
@@ -84,6 +84,10 @@ describe("Maintenance service", () => {
     await database.deleteMaintenance(maintenanceId);
 
     // Expectations.
+    if (!response.success) {
+      console.log(response.message);
+    }
+    console.log(response);
     expect(response.success).toBe(true);
     expect(response.maintenance.name).toBe(maintenance.name);
     expect(response.maintenance.systemid).toBe(maintenance.systemid);
