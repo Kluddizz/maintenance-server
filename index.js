@@ -22,7 +22,7 @@ app.use((err, req, res, next) => {
   if (err.name === "UnauthorizedError") {
     res.status(403).json({
       success: false,
-      message: "Unauthorized"
+      message: "Unauthorized",
     });
   }
 });
@@ -31,7 +31,7 @@ app.use((err, req, res, next) => {
 // automatically. Every route is represented by a 'express.Router' instance.
 const routesPath = path.join(__dirname, "routes");
 
-fs.readdirSync(routesPath).forEach(filename => {
+fs.readdirSync(routesPath).forEach((filename) => {
   const routePath = `./routes/${filename}`;
 
   if (path.extname(routePath) == ".js") {

@@ -77,7 +77,7 @@ router.get("/", access({ roles: ["admin"] }), async (req, res) => {
       ON systems.customerid = customers.id
     LEFT JOIN appointments
       ON appointments.maintenanceid = maintenances.id
-          AND appointments.date = due_date(maintenances.start_date, maintenances.frequency)
+          AND appointments.date::date = due_date(maintenances.start_date, maintenances.frequency)::date
     LEFT JOIN states
       ON states.id = appointments.stateid
     ORDER BY due_date;
@@ -109,7 +109,7 @@ router.get("/year/:year", access({ roles: ["admin"] }), async (req, res) => {
       ON systems.customerid = customers.id
     LEFT JOIN appointments
       ON appointments.maintenanceid = maintenances.id
-          AND appointments.date = due_date(maintenances.start_date, maintenances.frequency)
+          AND appointments.date::date = due_date(maintenances.start_date, maintenances.frequency)::date
     LEFT JOIN states
       ON states.id = appointments.stateid
     WHERE EXTRACT(YEAR FROM (due_date(maintenances.start_date, maintenances.frequency))) = $1
