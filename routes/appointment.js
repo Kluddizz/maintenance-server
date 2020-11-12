@@ -26,15 +26,15 @@ router.post(
 
 router.put("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
-  const { date, stateid } = req.body;
+  const { date, stateid, userid } = req.body;
 
   await db.query(
     `
       UPDATE appointments
-      SET date = $1, stateid = $2
-      WHERE id = $3;
+      SET date = $1, stateid = $2, userid = $3
+      WHERE id = $4;
       `,
-    [date, stateid, id]
+    [date, stateid, userid, id]
   );
 
   res.status(200).json({

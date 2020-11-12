@@ -5,41 +5,6 @@ const router = express.Router();
 const db = require("../db");
 
 router.get(
-  "/statistics/state/:stateId",
-  access({ roles: ["admin"] }),
-  async (req, res) => {
-    const { stateId } = req.params;
-
-    const stateQuery = await db.query(
-      `
-      SELECT COUNT(id)
-      FROM appointments
-      WHERE stateid = $1
-            AND EXTRACT(YEAR FROM date) = EXTRACT(YEAR FROM NOW());
-      `,
-      [stateId]
-    );
-
-    const totalQuery = await db.query(
-      `
-      SELECT COUNT(id)
-      FROM maintenances
-      WHERE EXTRACT(YEAR FROM due_date(start_date, frequency)) = EXTRACT(YEAR FROM NOW());
-      `,
-      []
-    );
-
-    res.status(200).json({
-      success: true,
-      statistics: {
-        total: totalQuery.rows[0]?.count,
-        actual: stateQuery.rows[0]?.count,
-      },
-    });
-  }
-);
-
-router.get(
   "/user/:userId",
   access({ roles: ["admin"], dataOwner: (req) => req.params.userId }),
   async (req, res) => {
@@ -66,7 +31,9 @@ router.get("/", access({ roles: ["admin"] }), async (req, res) => {
   const query = await db.query(
     `
     SELECT maintenances.*,
+            appointments.userid,
             customers.name as customer_name,
+            systems.name as system_name,
             due_date(maintenances.start_date, maintenances.frequency) as due_date,
             CASE WHEN states.name IS NULL THEN 'Ausstehend' ELSE states.name END AS state_name,
             CASE WHEN states.color IS NULL THEN '#c4c4c4' ELSE states.color END AS state_color
@@ -92,13 +59,55 @@ router.get("/", access({ roles: ["admin"] }), async (req, res) => {
   });
 });
 
+router.get(
+  "/user/:userid/year/:year",
+  access({ roles: ["admin"], dataOwner: (req) => req.params.userid }),
+  async (req, res) => {
+    const { userid, year } = req.params;
+
+    const query = await db.query(
+      `
+    SELECT maintenances.*,
+            appointments.userid,
+            customers.name as customer_name,
+            systems.name as system_name,
+            due_date(maintenances.start_date, maintenances.frequency) as due_date,
+            CASE WHEN states.name IS NULL THEN 'Ausstehend' ELSE states.name END AS state_name,
+            CASE WHEN states.color IS NULL THEN '#c4c4c4' ELSE states.color END AS state_color
+    FROM maintenances
+    LEFT JOIN systems
+      ON maintenances.systemid = systems.id
+    LEFT JOIN customers
+      ON systems.customerid = customers.id
+    LEFT JOIN appointments
+      ON appointments.maintenanceid = maintenances.id
+          AND appointments.date::date = due_date(maintenances.start_date, maintenances.frequency)::date
+    LEFT JOIN states
+      ON states.id = appointments.stateid
+    WHERE EXTRACT(YEAR FROM (due_date(maintenances.start_date, maintenances.frequency))) = $1
+          AND appointments.userid = $2
+    ORDER BY due_date;
+    `,
+      [year, userid]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Fetched all maintenances",
+      maintenances: query.rows,
+    });
+  }
+);
+
 router.get("/year/:year", access({ roles: ["admin"] }), async (req, res) => {
   const { year } = req.params;
 
   const query = await db.query(
     `
     SELECT maintenances.*,
+            appointments.userid,
             customers.name as customer_name,
+            systems.name as system_name,
             due_date(maintenances.start_date, maintenances.frequency) as due_date,
             CASE WHEN states.name IS NULL THEN 'Ausstehend' ELSE states.name END AS state_name,
             CASE WHEN states.color IS NULL THEN '#c4c4c4' ELSE states.color END AS state_color
@@ -184,10 +193,10 @@ router.put("/:id", access({ roles: ["admin"] }), async (req, res) => {
     const query = await db.query(
       `
         UPDATE maintenances
-        SET name = $1, frequency = $2, systemid = $3, userid = $4, start_date = $5
-        WHERE id = $6;
+        SET name = $1, frequency = $2, systemid = $3, start_date = $4
+        WHERE id = $5;
       `,
-      [name, frequency, systemid, userid, start_date, id]
+      [name, frequency, systemid, start_date, id]
     );
 
     res.status(200).json({
