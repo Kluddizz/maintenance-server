@@ -12,8 +12,12 @@ router.get(
 
     const query = await db.query(
       `
-        SELECT *
-        FROM maintenances
+        SELECT maintenances.*
+        FROM users
+        JOIN appointments
+          ON appointments.userid = users.id
+        JOIN maintenances
+          ON maintenances.id = appointments.maintenanceid
         WHERE userid = $1;
       `,
       [userId]
