@@ -4,9 +4,7 @@ const router = express.Router();
 
 const db = require("../db");
 
-router.use("/", access({ roles: ["admin"] }));
-
-router.get("/", async (req, res) => {
+router.get("/", access({ roles: ["admin"] }), async (req, res) => {
   const query = await db.query(
     `
       SELECT *
@@ -18,11 +16,35 @@ router.get("/", async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Fetched all systems",
-    systems: query.rows
+    systems: query.rows,
   });
 });
 
-router.get("/customer/:id", async (req, res) => {
+router.get("/user/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  const query = await db.query(
+    `
+    SELECT systems.*
+    FROM users
+    JOIN appointments
+      ON appointments.userid = users.id
+    JOIN maintenances
+      ON maintenances.id = appointments.maintenanceid
+    JOIN systems
+      ON systems.id = maintenances.systemid
+    WHERE users.id = $1;
+    `,
+    [userId]
+  );
+
+  res.status(200).json({
+    success: true,
+    systems: query.rows,
+  });
+});
+
+router.get("/customer/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -38,17 +60,17 @@ router.get("/customer/:id", async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Fetched all systems",
-      systems: query.rows
+      systems: query.rows,
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not request systems of the given customer"
+      message: "Could not request systems of the given customer",
     });
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
 
   const query = await db.query(
@@ -64,17 +86,17 @@ router.get("/:id", async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Fetched system",
-      system: query.rows[0]
+      system: query.rows[0],
     });
   } else {
     res.status(400).json({
       success: false,
-      message: "Could not request system with the given ID"
+      message: "Could not request system with the given ID",
     });
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", access({ roles: ["admin"] }), async (req, res) => {
   const { name, street, city, zip, customerid } = req.body;
 
   try {
@@ -89,17 +111,17 @@ router.post("/", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Created new system"
+      message: "Created new system",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Cannot create new system"
+      message: "Cannot create new system",
     });
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
   const { name, street, city, zip, customerid } = req.body;
 
@@ -115,17 +137,17 @@ router.put("/:id", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Updated system"
+      message: "Updated system",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not update system"
+      message: "Could not update system",
     });
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -140,12 +162,12 @@ router.delete("/:id", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Deleted system"
+      message: "Deleted system",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not delete system"
+      message: "Could not delete system",
     });
   }
 });
