@@ -4,9 +4,7 @@ const router = express.Router();
 
 const db = require("../db");
 
-router.use("/", access({ roles: ["admin"] }));
-
-router.get("/", async (req, res) => {
+router.get("/", access({ roles: ["admin"] }), async (req, res) => {
   const query = await db.query(
     `
       SELECT *
@@ -18,11 +16,37 @@ router.get("/", async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Fetched customers",
-    customers: query.rows
+    customers: query.rows,
   });
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/user/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  const query = await db.query(
+    `
+    SELECT customers.*
+    FROM users
+    JOIN appointments
+      ON appointments.userid = users.id
+    JOIN maintenances
+      ON maintenances.id = appointments.maintenanceid
+    JOIN systems
+      ON systems.id = maintenances.systemid
+    JOIN customers
+      ON systems.customerid = customers.id
+    WHERE users.id = $1;
+    `,
+    [userId]
+  );
+
+  res.status(200).json({
+    success: true,
+    customers: query.rows,
+  });
+});
+
+router.get("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
 
   const query = await db.query(
@@ -38,17 +62,17 @@ router.get("/:id", async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Fetched customer",
-      customer: query.rows[0]
+      customer: query.rows[0],
     });
   } else {
     res.status(400).json({
       success: false,
-      message: "This customer does not exist"
+      message: "This customer does not exist",
     });
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", access({ roles: ["admin"] }), async (req, res) => {
   const { name, street, city, zip, email, contactperson, phone } = req.body;
 
   try {
@@ -63,17 +87,17 @@ router.post("/", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Created new customer"
+      message: "Created new customer",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not create the new customer"
+      message: "Could not create the new customer",
     });
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
   const { name, street, city, zip, email, contactperson, phone } = req.body;
 
@@ -89,17 +113,17 @@ router.put("/:id", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Updated existing customer"
+      message: "Updated existing customer",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not update customer"
+      message: "Could not update customer",
     });
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", access({ roles: ["admin"] }), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -114,12 +138,12 @@ router.delete("/:id", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Deleted customer"
+      message: "Deleted customer",
     });
   } catch (err) {
     res.status(400).json({
       success: false,
-      message: "Could not delete customer"
+      message: "Could not delete customer",
     });
   }
 });
